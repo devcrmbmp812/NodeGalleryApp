@@ -1,0 +1,18 @@
+﻿<div>
+	<div align = "left"><mat-toolbar color="primary" align="center"> Polypaint </mat-toolbar> </div >
+	 <div  class="container-fluid" align="right">
+
+	<button class = "btn btn-secondary" align="right"><a [routerLink]="['/login']">Logout</a></button>
+</div>	
+</div>
+
+
+
+<div class="basic-container">
+	<h2 > <p align="center">Mes photos </p></h2>
+		<gallery id="basic-test" [items]="items"></gallery>
+</div>
+
+<div class="lightbox-example" align="center">
+	<button  class="btn btn-primary"  (click)="lightbox.open(0, 'lightbox')">Mode boite à lumière</button>
+</div>
