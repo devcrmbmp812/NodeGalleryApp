@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import * as express from 'express';
+
 import { HttpRequest, HttpResponse, HttpHandler, HttpEvent, HttpInterceptor, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { Observable } from 'rxjs/Observable';
 import * as mongoose from 'mongoose';
@@ -12,7 +13,9 @@ import 'rxjs/add/operator/materialize';
 import 'rxjs/add/operator/dematerialize';
 import * as fs from 'fs';
 
+
 module Route {
+
     export class Index {
 
     private urldb = 'mongodb://saad:1234@ds127129.mlab.com:27129/log3900-13';
@@ -111,27 +114,67 @@ module Route {
         return Observable.throw('Unauthorised');
       }
     }
-  public  imgSchema = new mongoose.Schema({
+    // public  imgSchema = new mongoose.Schema({
+    //     username: String,
+    //     id: Number,
+    //     title : String,
+    //     password: String,
+    //     type : Number,
+    //     img: [Number],
+    //     lastName: String,
+    // });
+    // public ImgFromDB = mongoose.model('imgAsPng', this.imgSchema);
+
+    public imageUpload(req:express.Request, res:express.Response, next: express.NextFunction): void {
+      console.log(req['files'].image);
+      let imgSchema = new mongoose.Schema({
         username: String,
-        id: Number,
+        id: String,
         title : String,
         password: String,
-        type : Number,
-        img: [Number],
-        lastName: String,
+        type : String,
+        privacy: Number,
+        img: [Buffer],
       });
-      public ImgFromDB = mongoose.model('imgAsPng', this.imgSchema);
+
+      let imgdb = mongoose.model('imgAsPng', imgSchema);
+
+      let imgdbInsertObj = new imgdb;
+     
+      console.log(req['files'].image.data);
+      imgdbInsertObj['img'] = req['files'].image.data;
+      imgdbInsertObj['title'] = req['files'].image.name;
+      imgdbInsertObj['type'] = req['files'].image.mimetype;
+      
+      console.log("-------------username ------------------");
+      console.log(req.session);
+      imgdbInsertObj['username'] = req.session.userName;
+      imgdbInsertObj['password'] = req.session.password;
+      imgdbInsertObj['id'] = req['session'].user_id;
+
+      // console.log(imgdbInsertObj.img);
+      imgdbInsertObj.save(function(err,a){
+        if(err){
+          console.log(err);
+        }else{
+          console.log("saved");
+          console.log(a);
+        }
+        // if(err) throw err;
+        // console.error('saved img to mongo');
+      });
+    }
 
     public authenticate(req: express.Request, res: express.Response, next: express.NextFunction): void {
       // get new user object from post body
       let newUser = req.body;
-      let userSchema = new mongoose.Schema({
-        userName: String,
-        password: String,
-        firstName: String,
-        lastName: String,
-        id: Number
-      });
+      // let userSchema = new mongoose.Schema({
+      //   userName: String,
+      //   password: String,
+      //   firstName: String,
+      //   lastName: String,
+      //   id: Number
+      // });
       let imgSchema = new mongoose.Schema({
         username: String,
         id: Number,
@@ -151,16 +194,16 @@ module Route {
           console.log("Fetch impossible");
           reject();
         });
-      let usersFromDB = mongoose.model('usersfromdbs', imgSchema);
+        let usersFromDB = mongoose.model('usersFromDB', this.userSchema);
 
         console.log("Fetch en cours ...");
         let promise = usersFromDB.find().exec((err, users: User[]) => {
           console.log("2");
           if (err) { return console.error(err); }
-          console.log(users);
           resolve(users);
         });
       }).then((usersDB: User[]) => {
+        console.log(usersDB);
         users = usersDB;
         let retur  = false;
         let index = 0;
@@ -171,16 +214,27 @@ module Route {
         }
         if (retur) {
           // if login details are valid return 200 OK with user details and fake jwt token
-          let user = users[0];
+          
+          let user = JSON.parse(JSON.stringify(users[0]));
+          console.log("*************************");
+          console.log(user.password);
           let body = {
             id: user.id,
-            username: user.username,
+            username: user.userName,
             firstName: user.firstName,
             lastName: user.lastName,
             token: 'fake-jwt-token'
           };
+          req.session.userName = user.userName;
+          req.session.password = user.password;
+          req.session.user_id = user.id;
+          console.log(req.session);
+          //req['session'].id = user.id;
+          //req['session'].id = user.id;
+          
           res.status(200);
           res.send(body);
+          
         } else {
           // else return 400 bad request
           res.status(400);

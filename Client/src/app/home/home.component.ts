@@ -7,10 +7,13 @@ import { Lightbox } from '../gallery/lightbox';
   styleUrls: ['../app.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
+
+
 export class HomeComponent implements OnInit {
 
   items: GalleryItem[];
-
+  serverURL: 'http://localhost:3002';
+  imageUploadURL: 'http://localhost:3002/api/imgupload';
   imageData = [
     {
       srcUrl: '../assets/img1.jpg',
@@ -32,6 +35,7 @@ export class HomeComponent implements OnInit {
   private  logged : boolean ;
 
   constructor(public gallery: Gallery, public lightbox: Lightbox) {
+    //this.imageUploadURL = this.serverURL + '/api/imgupload';
     this.logged = false;
   }
 

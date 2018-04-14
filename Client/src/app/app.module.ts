@@ -18,6 +18,8 @@ import { HomeComponent } from './home/index';
 import { LoginComponent } from './login/index';
 import { RegisterComponent } from './register/index';
 
+import { ImageUploadModule } from "angular2-image-upload";
+
 @NgModule({
   declarations: [
     AppComponent,
@@ -34,6 +36,7 @@ import { RegisterComponent } from './register/index';
     MatToolbarModule,
     GalleryModule.forRoot(),
     LightboxModule.forRoot(),
+    ImageUploadModule.forRoot(),
     BrowserModule,
     FormsModule,
     HttpClientModule,

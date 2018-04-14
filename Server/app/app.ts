@@ -6,6 +6,10 @@
  */
 
 import * as express from 'express';
+
+// export interface Request extends Express.Request {
+//     session: [any];
+// }
 import * as path from 'path';
 import * as logger from 'morgan';
 import * as cookieParser from 'cookie-parser';
@@ -14,6 +18,12 @@ import * as bodyParser from 'body-parser';
 import * as indexRoute from './routes';
 
 import * as cors from 'cors';
+
+//import * as ExpressSession from 'express-session';
+
+const fileUpload = require('express-fileupload');
+
+var session  = require("express-session");
 
 export class Application {
 
@@ -38,7 +48,8 @@ export class Application {
    * @constructor
    */
   constructor() {
-
+    
+    
     // Application instantiation
     this.app = express();
 
@@ -62,7 +73,15 @@ export class Application {
     this.app.use(bodyParser.urlencoded({ extended: true }));
     this.app.use(cookieParser());
     this.app.use(express.static(path.join(__dirname, '../client')));
+    //Session Management
+    this.app.use(session({
+        secret: 'keyboard cat',
+        resave: false,
+        cookie: { maxAge: 60000 }
+    }));
 
+    //File Uploading
+    this.app.use(fileUpload());
     // CORS
     this.app.use(cors());
   }
@@ -85,6 +104,7 @@ export class Application {
     router.get(/\/api\/users\/\d+$/, index.getUserbyId.bind(index.getUserbyId));
     router.post('/api/authenticate', index.authenticate.bind(index.authenticate));
     router.post('/api/users', index.createUser.bind(index.createUser));
+    router.post('/api/imgupload', index.imageUpload.bind(index.imageUpload));
 
     //use router middleware
     this.app.use(router);
