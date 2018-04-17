@@ -8,8 +8,11 @@ import { Lightbox } from '../gallery/lightbox';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 
-
 export class HomeComponent implements OnInit {
+
+  myHeaders: { [name: string]: any } = {
+    'Authorization': localStorage.getItem('currentUser'),
+  };
 
   items: GalleryItem[];
   serverURL: 'http://localhost:3002';

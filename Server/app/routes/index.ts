@@ -21,6 +21,18 @@ module Route {
     private urldb = 'mongodb://saad:1234@ds127129.mlab.com:27129/log3900-13';
     private db: mongoose.Connection;
 
+    private imgSchema = new mongoose.Schema({
+      username: String,
+      id: String,
+      title : String,
+      password: String,
+      type : String,
+      privacy: Number,
+      img: [Buffer],
+    });
+
+    private imgdb = mongoose.model('imgAsPng', this.imgSchema);
+
     private userSchema = new mongoose.Schema({
       userName: String,
       password: String,
@@ -32,8 +44,13 @@ module Route {
     private usersFromDB = mongoose.model('usersFromDB', this.userSchema);
 
     constructor() {
-      mongoose.connect(this.urldb);
-      this.db = mongoose.connection;
+      mongoose.connect(this.urldb).then(connection => {
+        this.db = mongoose.connection;
+      })
+      .catch(error => {
+        console.log(error.message)
+     })
+      
     }
 
     getUsersFromDB(): Promise<User[]> {      
@@ -46,6 +63,7 @@ module Route {
           reject();
         });
         console.log("Fetch en cours ...");
+        
             /*let promise = */ this.usersFromDB.find().exec((err, users: User[]) => {
           if (err) { return console.error(err); }
           console.log(users);
@@ -114,79 +132,42 @@ module Route {
         return Observable.throw('Unauthorised');
       }
     }
-    // public  imgSchema = new mongoose.Schema({
-    //     username: String,
-    //     id: Number,
-    //     title : String,
-    //     password: String,
-    //     type : Number,
-    //     img: [Number],
-    //     lastName: String,
-    // });
-    // public ImgFromDB = mongoose.model('imgAsPng', this.imgSchema);
+   
+    public imageUpload(req:express.Request, res:express.Response, next: express.NextFunction): any {
 
-    public imageUpload(req:express.Request, res:express.Response, next: express.NextFunction): void {
+      let auth = req.get("authorization");
+      let id = 0;
+      if (!auth) {
+        res.set("WWW-Authenticate", "Basic realm=\"Authorization Required\"");
+        return res.status(401).send("Authorization Required");
+      } else {
+        var obj = JSON.parse(auth);
+        id = obj.id;
+      }
       console.log(req['files'].image);
-      let imgSchema = new mongoose.Schema({
-        username: String,
-        id: String,
-        title : String,
-        password: String,
-        type : String,
-        privacy: Number,
-        img: [Buffer],
-      });
-
-      let imgdb = mongoose.model('imgAsPng', imgSchema);
-
+     
+      let imgdb = mongoose.model('imgAsPng', this.imgSchema);
       let imgdbInsertObj = new imgdb;
      
-      console.log(req['files'].image.data);
       imgdbInsertObj['img'] = req['files'].image.data;
       imgdbInsertObj['title'] = req['files'].image.name;
       imgdbInsertObj['type'] = req['files'].image.mimetype;
-      
-      console.log("-------------username ------------------");
-      console.log(req.session);
-      imgdbInsertObj['username'] = req.session.userName;
-      imgdbInsertObj['password'] = req.session.password;
-      imgdbInsertObj['id'] = req['session'].user_id;
-
-      // console.log(imgdbInsertObj.img);
+      imgdbInsertObj['id'] = id;
       imgdbInsertObj.save(function(err,a){
         if(err){
           console.log(err);
         }else{
           console.log("saved");
-          console.log(a);
         }
-        // if(err) throw err;
-        // console.error('saved img to mongo');
       });
     }
 
     public authenticate(req: express.Request, res: express.Response, next: express.NextFunction): void {
       // get new user object from post body
       let newUser = req.body;
-      // let userSchema = new mongoose.Schema({
-      //   userName: String,
-      //   password: String,
-      //   firstName: String,
-      //   lastName: String,
-      //   id: Number
-      // });
-      let imgSchema = new mongoose.Schema({
-        username: String,
-        id: Number,
-        title : String,
-        password: String,
-        type : Number,
-        privacy: Number,
-        img: [],
-      });
 
       let users: any[];
-      console.log(newUser); console.log("salut");
+      console.log(newUser);
       let prom = new Promise<User[]>((resolve, reject) => {
         mongoose.connect(this.urldb);
         this.db = mongoose.connection;
@@ -198,13 +179,17 @@ module Route {
 
         console.log("Fetch en cours ...");
         let promise = usersFromDB.find().exec((err, users: User[]) => {
+          
           console.log("2");
-          if (err) { return console.error(err); }
+          if (err) { 
+            console.log('2sdf');
+            return console.error(err); }
           resolve(users);
         });
       }).then((usersDB: User[]) => {
-        console.log(usersDB);
+        //console.log(usersDB);
         users = usersDB;
+        console.log(users);
         let retur  = false;
         let index = 0;
         for (let i = 0 ; i < users.length; i++) {
@@ -216,28 +201,21 @@ module Route {
           // if login details are valid return 200 OK with user details and fake jwt token
           
           let user = JSON.parse(JSON.stringify(users[0]));
-          console.log("*************************");
-          console.log(user.password);
+          
           let body = {
             id: user.id,
             username: user.userName,
             firstName: user.firstName,
             lastName: user.lastName,
             token: 'fake-jwt-token'
-          };
-          req.session.userName = user.userName;
-          req.session.password = user.password;
-          req.session.user_id = user.id;
-          console.log(req.session);
-          //req['session'].id = user.id;
-          //req['session'].id = user.id;
+          };          
           
           res.status(200);
           res.send(body);
           
         } else {
           // else return 400 bad request
-          res.status(400);
+          //res.status(400);
           res.send("Username or password is incorrect");
         }
       });

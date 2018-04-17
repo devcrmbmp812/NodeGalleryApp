@@ -7,18 +7,13 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 const express = require("express");
-// export interface Request extends Express.Request {
-//     session: [any];
-// }
 const path = require("path");
 const logger = require("morgan");
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
 const indexRoute = require("./routes");
 const cors = require("cors");
-//import * as ExpressSession from 'express-session';
 const fileUpload = require('express-fileupload');
-var session = require("express-session");
 class Application {
     /**
      * Bootstrap the application.
@@ -58,12 +53,9 @@ class Application {
         this.app.use(bodyParser.urlencoded({ extended: true }));
         this.app.use(cookieParser());
         this.app.use(express.static(path.join(__dirname, '../client')));
-        //Session Management
-        this.app.use(session({
-            secret: 'keyboard cat',
-            resave: false,
-            cookie: { maxAge: 60000 }
-        }));
+        /**
+        * 2018.4.14 by mohd
+        */
         //File Uploading
         this.app.use(fileUpload());
         // CORS

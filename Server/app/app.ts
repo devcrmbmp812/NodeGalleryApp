@@ -7,9 +7,6 @@
 
 import * as express from 'express';
 
-// export interface Request extends Express.Request {
-//     session: [any];
-// }
 import * as path from 'path';
 import * as logger from 'morgan';
 import * as cookieParser from 'cookie-parser';
@@ -19,11 +16,7 @@ import * as indexRoute from './routes';
 
 import * as cors from 'cors';
 
-//import * as ExpressSession from 'express-session';
-
 const fileUpload = require('express-fileupload');
-
-var session  = require("express-session");
 
 export class Application {
 
@@ -48,8 +41,7 @@ export class Application {
    * @constructor
    */
   constructor() {
-    
-    
+
     // Application instantiation
     this.app = express();
 
@@ -58,6 +50,7 @@ export class Application {
 
     //configure routes
     this.routes();
+    
   }
 
   /**
@@ -73,13 +66,10 @@ export class Application {
     this.app.use(bodyParser.urlencoded({ extended: true }));
     this.app.use(cookieParser());
     this.app.use(express.static(path.join(__dirname, '../client')));
-    //Session Management
-    this.app.use(session({
-        secret: 'keyboard cat',
-        resave: false,
-        cookie: { maxAge: 60000 }
-    }));
 
+     /**
+     * 2018.4.14 by mohd
+     */
     //File Uploading
     this.app.use(fileUpload());
     // CORS
